@@ -1,0 +1,19 @@
+
+html,
+body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  place-items: center;
+}
+
+.svg {
+  display: block;
+  margin: auto;
+  width: 525px;
+  height: 525px;
+}
