@@ -47,8 +47,8 @@ class Entity {
 }
 
 class Service {
-  bgColor         = '';
-  accentColor     = '';
+  bgColor     = '';
+  accentColor = '';
   world;
   topText;
   saveImageButton;
@@ -67,6 +67,14 @@ class Service {
   appearButtons() {
     const buttons = new Entity('.buttons');
     buttons.classRemove('hidden');
+  }
+
+  async saveImage() {
+    this.world.classAdd('downloading');
+    const option  = { href: await svg2png(this.world.element), download: 'akaino-warai.png' };
+    const link    = Object.assign(document.createElement('a'), option);
+    link.click();
+    this.world.classRemove('downloading');
   }
 
   reset() {
@@ -103,6 +111,11 @@ class Game {
   }
 
   start() {
+    const saveImageButtonClick = e => {
+      e.stopPropagation();
+      this.service.saveImage();
+      this.service.resetButton.element.removeEventListener('click', saveImageButtonClick);
+    };
     const resetButtonClick = e => {
       e.stopPropagation();
       this.service.reset();
@@ -130,6 +143,7 @@ class Game {
         this.service.world.element.removeEventListener('click', worldClick);
       }
     };
+    this.service.saveImageButton.element.addEventListener('click', saveImageButtonClick);
     this.service.resetButton.element.addEventListener('click', resetButtonClick);
     this.service.world.element.addEventListener('click', worldClick);
   }
@@ -159,6 +173,42 @@ class Game {
   };
 };
 
-addEventListener('load', async load => {
-  const service = new Service();
-});
+addEventListener('load', async load => new Service());
+
+/** {@link https://qiita.com/Nikkely/items/aa485ebdbec51e49ecbc} */
+const svg2png = (svg) => {
+  const clonedSvg   = svg.cloneNode(false);
+  const queue       = [[svg, clonedSvg]];
+  clonedSvg.version = 1.1;
+  clonedSvg.xmlns   = 'http://www.w3.org/2000/svg';
+  while (queue.length !== 0) {
+    const [rEle, vEle]  = queue.pop();
+    const computedStyle = window.getComputedStyle(rEle, '');
+    const rChildren     = rEle.children
+    for (let property of computedStyle) {
+      vEle.style[property] = computedStyle.getPropertyValue(property);
+    }
+    if (rChildren.length !== 0) {
+      for (let rChild of rChildren) {
+        const vChild = rChild.cloneNode(false);
+        vEle.appendChild(vChild);
+        queue.push([rChild, vChild]);
+      }
+    } else {
+      vEle.innerHTML = rEle.innerHTML;
+    }
+  }
+  const serializedSvg = new XMLSerializer().serializeToString(clonedSvg)
+  const size          = { width: svg.width.baseVal.value, height: svg.height.baseVal.value };
+  const canvas        = Object.assign(document.createElement('canvas'), size);
+  const ctx           = canvas.getContext('2d');
+  const image         = new Image();
+  return new Promise((resolve, reject) => {
+    image.onload = () => {
+      ctx.drawImage(image, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    image.onerror = e => reject(e);
+    image.src = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(serializedSvg)));
+  });
+};

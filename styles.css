@@ -25,7 +25,6 @@ body {
   box-shadow: 0 0 1vmin #00000050, 0 0 0.5vmin #00000050 inset;
   border-radius: min(1vmin, 5px);
   cursor: pointer;
-  margin: auto;
   width: auto;
   height: auto;
   max-width: 100%;
@@ -76,4 +75,14 @@ body {
 
 .buttons .right .bg {
   fill: #ffd012cc;
+}
+
+.downloading.world {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.downloading .top,
+.downloading .bottom {
+  display: none;
 }
