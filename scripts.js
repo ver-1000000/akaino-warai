@@ -16,25 +16,26 @@ class Entity {
   animationFrame = null;
 
   set fill(value) {
-    this.element.setAttribute('fill', value);
+    this._updateAttribute('fill', value);
   }
 
   set stroke(value) {
-    this.element.setAttribute('stroke', value);
+    this._updateAttribute('stroke', value);
   }
 
   set transform(value) {
-    this.element.setAttribute('transform', value);
+    this._updateAttribute('transform', value);
   }
 
   set transformOrigin(value) {
-    this.element.setAttribute('transform-origin', value);
+    this._updateAttribute('transform-origin', value);
   }
 
   constructor(uniqQuery) {
     this.uniqQuery = uniqQuery;
     this.name      = QUERY_NAME_MAP[uniqQuery] || '';
     this.element   = document.querySelector(uniqQuery);
+    this.restore();
   }
 
   classRemove(...tokens) {
@@ -43,6 +44,17 @@ class Entity {
 
   classAdd(...tokens) {
     this.element.classList.add(tokens);
+  }
+
+  restore() {
+  }
+
+  _updateAttribute(key, value) {
+    if (value) {
+      this.element.setAttribute(key, value);
+    } else {
+      this.element.removeAttribute(key);
+    }
   }
 }
 
@@ -55,6 +67,7 @@ class Service {
   tweetButton;
   resetButton;
   cloneWorldNode;
+  animEntities;
 
   constructor() {
     this.reset();
@@ -77,6 +90,14 @@ class Service {
     this.world.classRemove('downloading');
   }
 
+  tweet() {
+    const text       = encodeURI('朱猪わらいで朱猪作りにチャレンジ！');
+    const url        = encodeURI('https://ver-1000000.github.io/akaino-warai/');
+    const hashtag    = encodeURI('朱猪わらい');
+    const twitterUrl = `//twitter.com/share?hashtags=${hashtag}&text=${text}&url=${url}`;
+    open(twitterUrl, '_blank', `menubar=no,toolbar=no,resizable=yes,scrollbars=yes,width=600,height=400`);
+  }
+
   reset() {
     if (this.cloneWorldNode) {
       this.world.element.parentNode.replaceChild(this.cloneWorldNode, this.world.element);
@@ -86,6 +107,7 @@ class Service {
     this.saveImageButton = new Entity('.bottom .left.button');
     this.tweetButton     = new Entity('.bottom .center.button');
     this.resetButton     = new Entity('.bottom .right.button');
+    this.animEntities    = Object.keys(QUERY_NAME_MAP).map(x => new Entity(x));
     this.cloneWorldNode  = this.world.element.cloneNode(true);
 
     const hue            = random(360);
@@ -101,7 +123,6 @@ class Service {
 }
 
 class Game {
-  animEntities  = Object.keys(QUERY_NAME_MAP).map(x => new Entity(x));
   currentEntity = null;
   service;
 
@@ -116,6 +137,11 @@ class Game {
       this.service.saveImage();
       this.service.resetButton.element.removeEventListener('click', saveImageButtonClick);
     };
+    const tweetButtonClick = e => {
+      e.stopPropagation();
+      this.service.tweet();
+      this.service.tweetButton.element.removeEventListener('click', tweetButtonClick);
+    };
     const resetButtonClick = e => {
       e.stopPropagation();
       this.service.reset();
@@ -124,14 +150,13 @@ class Game {
     const worldClick = () => {
       if (this.currentEntity == null) {
         // 初回
-        this.animEntities.forEach(entity => this.animate(entity));
-        this.currentEntity = this.animEntities[0];
+        this.service.animEntities.forEach(entity => this.animate(entity));
+        this.currentEntity = this.service.animEntities[0];
       } else {
         // 初回以降
         cancelAnimationFrame(this.currentEntity.animationFrame);
-        this.currentEntity.animationFrame = null;
-        this.currentEntity.stroke         = null;
-        this.currentEntity                = this.animEntities[this.animEntities.indexOf(this.currentEntity) + 1];
+        Object.assign(this.currentEntity, { animationFrame: null, stroke: null });
+        this.currentEntity = this.service.animEntities[this.service.animEntities.indexOf(this.currentEntity) + 1];
       }
       if (this.currentEntity) {
         // 終了以前
@@ -144,6 +169,7 @@ class Game {
       }
     };
     this.service.saveImageButton.element.addEventListener('click', saveImageButtonClick);
+    this.service.tweetButton.element.addEventListener('click', tweetButtonClick);
     this.service.resetButton.element.addEventListener('click', resetButtonClick);
     this.service.world.element.addEventListener('click', worldClick);
   }
