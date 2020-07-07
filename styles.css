@@ -15,6 +15,7 @@ body {
   background: white;
   box-shadow: 0 0 1vmin #ccc, 0 0 0.5vmin #ccc inset;
   border-radius: min(1vmin, 5px);
+  cursor: pointer;
   margin: auto;
   width: auto;
   height: auto;
@@ -27,4 +28,9 @@ body {
   transform-origin: 50px 40px;
   width: 100px;
   height: 80px;
+}
+
+.top-text {
+  text-anchor: middle;
+  user-select: none;
 }
