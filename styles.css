@@ -16,7 +16,12 @@ body {
   pointer-events: none;
 }
 
-.frame {
+.hidden {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.world {
   box-shadow: 0 0 1vmin #00000050, 0 0 0.5vmin #00000050 inset;
   border-radius: min(1vmin, 5px);
   cursor: pointer;
@@ -34,11 +39,41 @@ body {
   height: 80px;
 }
 
-.top-text {
+.text {
+  fill: white;
   text-anchor: middle;
   user-select: none;
-  fill: white;
-  stroke-width: 5px;
+  stroke-width: 6px;
   paint-order: stroke;
   stroke-linejoin: round;
+}
+
+.buttons {
+  transition: opacity 300ms ease;
+}
+
+.buttons .bg,
+.buttons .frame {
+  pointer-events: all;
+  width: 160px;
+  height: 40px;
+  rx: 5px;
+}
+
+.buttons .frame {
+  fill: none;
+  stroke: #ffffffee;
+  stroke-width: 2px;
+}
+
+.buttons .left .bg {
+  fill: #ff99ffcc;
+}
+
+.buttons .center .bg {
+  fill: #8bb9f7cc;
+}
+
+.buttons .right .bg {
+  fill: #ffd012cc;
 }

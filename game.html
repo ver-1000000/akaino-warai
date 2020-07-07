@@ -10,7 +10,7 @@
     <script async src="https://ver-1000000.github.io/akaino-warai/scripts.js"></script>
   </head>
   <body>
-    <svg class="frame loading" width="512" height="512" viewBox="0 0 512 512">
+    <svg class="world loading" width="512" height="512" viewBox="0 0 512 512">
       <g class="akaino">
         <g class="body" fill="#ed514e">
           <path class="base" d="M16.5 4.6c-1.1 0-2 .2-2.6.5-4.9 3-4 15.6-3.6 20.3a40.9 40.9 0 0 0-9.4 27c0 8.4 4.1 14 12.7 19.6 8 5.2 24.3 7.2 36.4 7.2 12.1 0 28.4-2 36.4-7.2C95 66.4 99 60.8 99 52.5c0-13-4.9-21.7-9.4-27C90.1 20.6 91 8 86.1 5c-2.2-1.2-9.8 0-17 4.8C62.8 8 57.5 7.2 50 7.2c-7.6 0-12.9.8-19 2.7a29.4 29.4 0 0 0-14.5-5.3"/>
@@ -44,7 +44,28 @@
           </g>
         </g>
       </g>
-      <text class="top-text" x="50%" y="2em">読込中</text>
+
+      <g class="top">
+        <text class="text" x="50%" y="2em">読込中</text>
+      </g>
+
+      <g class="bottom buttons hidden">
+        <g class="left button">
+          <rect class="bg" x="10" y="466"></rect>
+          <rect class="frame" x="6" y="462"></rect>
+          <text class="text save-image" x="88" y="490">SAVE IMAGE</text>
+        </g>
+        <g class="center button">
+          <rect class="bg" x="178" y="466"></rect>
+          <rect class="frame" x="174" y="462"></rect>
+          <text class="text tweet" x="256" y="490">TWEET</text>
+        </g>
+        <g class="right button">
+          <rect class="bg" x="346" y="466"></rect>
+          <rect class="frame" x="342" y="462"></rect>
+          <text class="text reset" x="424" y="490">RESET</text>
+        </g>
+      </g>
     </svg>
   </body>
 </html>
