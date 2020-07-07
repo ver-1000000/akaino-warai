@@ -9,11 +9,15 @@ body {
 body {
   display: grid;
   place-items: center;
+  font-weight: bolder;
+}
+
+.loading {
+  pointer-events: none;
 }
 
 .frame {
-  background: white;
-  box-shadow: 0 0 1vmin #ccc, 0 0 0.5vmin #ccc inset;
+  box-shadow: 0 0 1vmin #00000050, 0 0 0.5vmin #00000050 inset;
   border-radius: min(1vmin, 5px);
   cursor: pointer;
   margin: auto;
@@ -24,8 +28,8 @@ body {
 }
 
 .akaino {
-  transform: translate(206px, 203px) scale(2);
   transform-origin: 50px 40px;
+  transform: translate(206px, 203px) scale(2);
   width: 100px;
   height: 80px;
 }
@@ -33,4 +37,8 @@ body {
 .top-text {
   text-anchor: middle;
   user-select: none;
+  fill: white;
+  stroke-width: 5px;
+  paint-order: stroke;
+  stroke-linejoin: round;
 }
