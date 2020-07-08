@@ -205,16 +205,16 @@ class Game {
 
   animate(entity) {
     const update = ({ origin, x, y, scale, rotate })=> {
-      const dOrigin = 50 + Math.abs(5 - origin); // 45 ~ 55
-      const dScale  = .5 + Math.abs(scale);      // .5 ~ 5.5
-      const dX      = 64 - Math.abs(128 - x);    // -64 ~ 64
-      const dY      = 64 - Math.abs(128 - y);    // -64 ~ 64
+      const dOrigin = 50 + Math.abs(origin - 5);       // 45 ~ 55
+      const dScale  = (5 + Math.abs(scale - 50)) / 10; // .5 ~ 5.5
+      const dX      = 64 - Math.abs(128 - x);          // -64 ~ 64
+      const dY      = 64 - Math.abs(128 - y);          // -64 ~ 64
       entity.updateAttribute('transform', `translate(${dX} ${dY}) scale(${dScale}) rotate(${rotate})`);
       entity.updateAttribute('transform-origin', `${dOrigin}px 40px`);
       origin                = (origin + 1) % 10;
       x                     = (x + 7) % 256;
       y                     = (y + 3) % 256;
-      scale                 = ((scale + 5) * 10 + 1) % 100 / 10 - 5;
+      scale                 = (scale + 1) % 100;
       rotate                = (rotate + 9) % 360;
       if (entity.animation) { requestAnimationFrame(() => update({ origin, x, y, scale, rotate })); }
     };
