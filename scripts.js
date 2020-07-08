@@ -50,16 +50,16 @@ class Entity {
     }
   }
 
+  reset() {
+    Entity.RESTORABLE_ATTRIBUTES.forEach(attr => this.updateAttribute(attr, null));
+  }
+
   restore() {
     const params = Object.fromEntries(new URLSearchParams(location.search));
     Entity.RESTORABLE_ATTRIBUTES.forEach(attr => {
       const value = params[`${this.uniqQuery}:${attr}`];
       if (value) { this.updateAttribute(attr, value); }
     });
-  }
-
-  reset() {
-    Entity.RESTORABLE_ATTRIBUTES.forEach(attr => this.updateAttribute(attr, null));
   }
 }
 
@@ -85,43 +85,43 @@ class Service {
     return `hsl(${(this.hue - 90) % 360}, 100%, 40%)`;
   }
 
-  constructor() {
-    new Game(this);
-    if (this.params.get('hue')) { this.restore(); }
-  }
-
-  updateTopText(text = '') {
-    this.topText.element.innerHTML = text;
-  }
-
-  downloadImageAndCloseWindow() {
-    const href = localStorage.getItem('png');
-    if (href == null) { return; }
-    const option  = { href, download: 'akaino-warai.png' };
-    const link    = Object.assign(document.createElement('a'), option);
-    link.click();
-    localStorage.clear();
-    close();
-  }
-
-  saveImage() {
-    this.world.addClass('downloading');
-    svg2png(this.world.element).then(png => {
-      localStorage.setItem('png', png);
-      this.world.removeClass('downloading');
-      open('https://ver-1000000.github.io/akaino-warai/game.html');
-    });
-  }
-
-  tweet() {
+  get resultURL() {
     const params = new URLSearchParams();
     this.animEntities.forEach(x => [...x.searchParams].forEach(([k, v]) => params.append(k, v)));
     params.append('hue', this.hue);
-    const url        = `https://ver-1000000.github.io/akaino-warai/?${encodeURIComponent(params)}`;
+    return `https://ver-1000000.github.io/akaino-warai/?${params}`;
+  }
+
+  constructor() {
+    new Game(this);
+    if (this.params.get('hue') != null) { this.restore(); }
+    if (this.params.get('download') != null) { this.downloadImage(); }
+  }
+
+  downloadImage() {
+    this.restore();
+    svg2png(this.world.element).then(href => {
+      Object.assign(document.createElement('a'), { href, download: 'akaino-warai.png' }).click();
+      close();
+    });
+  }
+
+  openDownloadWindow() {
+    open(this.resultURL + '&download=');
+  }
+
+  tweet() {
+    const url        = encodeURIComponent(this.resultURL);
     const text       = encodeURIComponent('こんな朱猪になっちゃった！ 朱猪わらいで朱猪を完成させよう！');
     const hashtag    = encodeURIComponent('朱猪わらい');
     const twitterUrl = `//twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=${hashtag}`;
     open(twitterUrl, '_blank', `menubar=no,toolbar=no,resizable=yes,scrollbars=yes,width=710,height=400`);
+  }
+
+  reset() {
+    this.hue = random(360);
+    this.animEntities.forEach(x => x.reset());
+    new Game(this);
   }
 
   restore() {
@@ -131,17 +131,14 @@ class Service {
     this.updateTopText();
   }
 
-  reset() {
-    this.downloadImageAndCloseWindow();
-    this.hue = random(360);
-    this.animEntities.forEach(x => x.reset());
-    new Game(this);
-  }
-
   finish() {
     this.world.addClass('loading');
     this.updateTopText('完成！―― Finish!');
     this.buttons.removeClass('hidden');
+  }
+
+  updateTopText(text = '') {
+    this.topText.element.innerHTML = text;
   }
 }
 
@@ -157,52 +154,52 @@ class Game {
     this.start();
   }
 
+  saveImageButtonClick(e) {
+    e.stopPropagation();
+    this.service.openDownloadWindow();
+  }
+
+  tweetButtonClick(e) {
+    e.stopPropagation();
+    this.service.tweet();
+  }
+
+  resetButtonClick(e) {
+    e.stopPropagation();
+    this.service.reset();
+  };
+
+  worldClick() {
+    if (this.currentEntity == null) {
+      // 初回
+      this.service.animEntities.forEach(entity => this.animate(entity));
+      this.currentEntity = this.service.animEntities[0];
+    } else {
+      // 初回以降
+      this.currentEntity.updateAttribute('stroke', null);
+      this.currentEntity.animation = false;
+      this.currentEntity           = this.service.animEntities[this.service.animEntities.indexOf(this.currentEntity) + 1];
+    }
+    if (this.currentEntity) {
+      // 終了以前
+      this.service.updateTopText(this.currentEntity.name);
+      this.currentEntity.updateAttribute('stroke', this.service.accentColor);
+    } else {
+      // 終了処理
+      this.service.finish();
+    };
+  }
+
   start() {
     this.service.world.removeClass('loading');
     this.service.updateTopText('クリックすると始まるよ！―― Click to Start!');
     this.service.world.element.style.setProperty('background-color', this.service.bgColor);
     this.service.topText.updateAttribute('stroke', this.service.accentColor);
     this.service.buttons.addClass('hidden');
-    const saveImageButtonClick = e => {
-      e.stopPropagation();
-      this.service.saveImage();
-      this.service.resetButton.element.removeEventListener('click', saveImageButtonClick);
-    };
-    const tweetButtonClick = e => {
-      e.stopPropagation();
-      this.service.tweet();
-      this.service.tweetButton.element.removeEventListener('click', tweetButtonClick);
-    };
-    const resetButtonClick = e => {
-      e.stopPropagation();
-      this.service.reset();
-      this.service.resetButton.element.removeEventListener('click', resetButtonClick);
-    };
-    const worldClick = () => {
-      if (this.currentEntity == null) {
-        // 初回
-        this.service.animEntities.forEach(entity => this.animate(entity));
-        this.currentEntity = this.service.animEntities[0];
-      } else {
-        // 初回以降
-        this.currentEntity.updateAttribute('stroke', null);
-        this.currentEntity.animation = false;
-        this.currentEntity           = this.service.animEntities[this.service.animEntities.indexOf(this.currentEntity) + 1];
-      }
-      if (this.currentEntity) {
-        // 終了以前
-        this.service.updateTopText(this.currentEntity.name);
-        this.currentEntity.updateAttribute('stroke', this.service.accentColor);
-      } else {
-        // 終了処理
-        this.service.finish();
-        this.service.world.element.removeEventListener('click', worldClick);
-      }
-    };
-    this.service.saveImageButton.element.addEventListener('click', saveImageButtonClick);
-    this.service.tweetButton.element.addEventListener('click', tweetButtonClick);
-    this.service.resetButton.element.addEventListener('click', resetButtonClick);
-    this.service.world.element.addEventListener('click', worldClick);
+    this.service.saveImageButton.element.onclick = e => this.saveImageButtonClick(e);
+    this.service.tweetButton.element.onclick     = e => this.tweetButtonClick(e);
+    this.service.resetButton.element.onclick     = e => this.resetButtonClick(e);
+    this.service.world.element.onclick           = () => this.worldClick();
   }
 
   animate(entity) {
