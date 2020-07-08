@@ -100,6 +100,7 @@ class Service {
 
   downloadImage() {
     this.restore();
+    this.buttons.addClass('hidden');
     svg2png(this.world.element).then(href => {
       Object.assign(document.createElement('a'), { href, download: 'akaino-warai.png' }).click();
       close();
