@@ -82,12 +82,21 @@ class Service {
     buttons.classRemove('hidden');
   }
 
-  async saveImage() {
-    this.world.classAdd('downloading');
-    const option  = { href: await svg2png(this.world.element), download: 'akaino-warai.png' };
+  downloadImageAndCloseWindow() {
+    const href = localStorage.getItem('png');
+    if (href == null) { return; }
+    const option  = { href, download: 'akaino-warai.png' };
     const link    = Object.assign(document.createElement('a'), option);
     link.click();
+    localStorage.clear();
+    close();
+  }
+
+  async saveImage() {
+    this.world.classAdd('downloading');
+    localStorage.setItem('png', await svg2png(this.world.element));
     this.world.classRemove('downloading');
+    open('https://ver-1000000.github.io/akaino-warai/game.html');
   }
 
   tweet() {
@@ -99,6 +108,7 @@ class Service {
   }
 
   reset() {
+    this.downloadImageAndCloseWindow();
     if (this.cloneWorldNode) {
       this.world.element.parentNode.replaceChild(this.cloneWorldNode, this.world.element);
     }
