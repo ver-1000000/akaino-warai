@@ -127,6 +127,7 @@ class Service {
   restore() {
     this.hue = this.params.get('hue');
     this.animEntities.forEach(x => x.restore());
+    this.world.element.style.setProperty('background-color', this.bgColor);
     this.finish();
     this.updateTopText();
   }
