@@ -93,7 +93,7 @@ class Service {
   }
 
   constructor() {
-    new Game(this);
+    new Control(this);
     if (this.params.get('hue') != null) { this.restore(); }
     if (this.params.get('download') != null) { this.downloadImage(); }
   }
@@ -122,7 +122,7 @@ class Service {
   reset() {
     this.hue = random(360);
     this.animEntities.forEach(x => x.reset());
-    new Game(this);
+    new Control(this);
   }
 
   restore() {
@@ -145,9 +145,9 @@ class Service {
 }
 
 /**
- * ゲームのサイクルを記述するクラス。
+ * コントロールを記述するクラス。
  */
-class Game {
+class Control {
   currentEntity = null;
   service;
 
