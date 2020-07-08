@@ -9,77 +9,89 @@ const QUERY_NAME_MAP = {
   '.eye .right': '右目―― Right Eye',
 };
 
+/**
+ * DOMを扱いやすくするためのラッパー。
+ */
 class Entity {
+  static RESTORABLE_ATTRIBUTES = ['stroke', 'transform', 'transform-origin'];
   uniqQuery;
   name;
   element;
-  animationFrame = null;
+  animation = false;
 
-  set fill(value) {
-    this._updateAttribute('fill', value);
-  }
-
-  set stroke(value) {
-    this._updateAttribute('stroke', value);
-  }
-
-  set transform(value) {
-    this._updateAttribute('transform', value);
-  }
-
-  set transformOrigin(value) {
-    this._updateAttribute('transform-origin', value);
+  get searchParams() {
+    const params = new URLSearchParams();
+    Entity
+      .RESTORABLE_ATTRIBUTES
+      .map(x => [x, this.element.getAttribute(x)])
+      .forEach(([k, v]) => v && params.append(`${this.uniqQuery}:${k}`, v));
+    return params;
   }
 
   constructor(uniqQuery) {
     this.uniqQuery = uniqQuery;
     this.name      = QUERY_NAME_MAP[uniqQuery] || '';
     this.element   = document.querySelector(uniqQuery);
-    this.restore();
   }
 
-  classRemove(...tokens) {
+  removeClass(...tokens) {
     this.element.classList.remove(tokens);
   }
 
-  classAdd(...tokens) {
+  addClass(...tokens) {
     this.element.classList.add(tokens);
   }
 
-  restore() {
-  }
-
-  _updateAttribute(key, value) {
+  updateAttribute(key, value) {
     if (value) {
       this.element.setAttribute(key, value);
     } else {
       this.element.removeAttribute(key);
     }
   }
+
+  restore() {
+    const params = Object.fromEntries(new URLSearchParams(location.search));
+    Entity.RESTORABLE_ATTRIBUTES.forEach(attr => {
+      const value = params[`${this.uniqQuery}:${attr}`];
+      if (value) { this.updateAttribute(attr, value); }
+    });
+  }
+
+  reset() {
+    Entity.RESTORABLE_ATTRIBUTES.forEach(attr => this.updateAttribute(attr, null));
+  }
 }
 
+/**
+ * シングルトン的に利用するロジックをまとめたサービス。
+ */
 class Service {
-  bgColor     = '';
-  accentColor = '';
-  world;
-  topText;
-  saveImageButton;
-  tweetButton;
-  resetButton;
-  cloneWorldNode;
-  animEntities;
+  hue             = random();
+  world           = new Entity('.world');
+  topText         = new Entity('.top .text');
+  buttons         = new Entity('.buttons');
+  saveImageButton = new Entity('.bottom .left.button');
+  tweetButton     = new Entity('.bottom .center.button');
+  resetButton     = new Entity('.bottom .right.button');
+  animEntities    = Object.keys(QUERY_NAME_MAP).map(x => new Entity(x));
+  params          = new URLSearchParams(location.href);
+
+  get bgColor() {
+    return `hsl(${this.hue}, 100%, 70%)`;
+  }
+
+  get accentColor() {
+    return `hsl(${(this.hue - 90) % 360}, 100%, 40%)`;
+  }
 
   constructor() {
-    this.reset();
+    new Game(this);
+    if (this.params.get('hue')) { this.restore(); }
   }
 
   updateTopText(text = '') {
     this.topText.element.innerHTML = text;
-  }
-
-  appearButtons() {
-    const buttons = new Entity('.buttons');
-    buttons.classRemove('hidden');
   }
 
   downloadImageAndCloseWindow() {
@@ -92,46 +104,50 @@ class Service {
     close();
   }
 
-  async saveImage() {
-    this.world.classAdd('downloading');
-    localStorage.setItem('png', await svg2png(this.world.element));
-    this.world.classRemove('downloading');
-    open('https://ver-1000000.github.io/akaino-warai/game.html');
+  saveImage() {
+    this.world.addClass('downloading');
+    svg2png(this.world.element).then(png => {
+      localStorage.setItem('png', png);
+      this.world.removeClass('downloading');
+      open('https://ver-1000000.github.io/akaino-warai/game.html');
+    });
   }
 
   tweet() {
-    const text       = encodeURI('朱猪わらいで朱猪作りにチャレンジ！');
-    const url        = encodeURI('https://ver-1000000.github.io/akaino-warai/');
-    const hashtag    = encodeURI('朱猪わらい');
-    const twitterUrl = `//twitter.com/share?hashtags=${hashtag}&text=${text}&url=${url}`;
-    open(twitterUrl, '_blank', `menubar=no,toolbar=no,resizable=yes,scrollbars=yes,width=600,height=400`);
+    const params = new URLSearchParams();
+    this.animEntities.forEach(x => [...x.searchParams].forEach(([k, v]) => params.append(k, v)));
+    params.append('hue', this.hue);
+    const url        = `https://ver-1000000.github.io/akaino-warai/?${encodeURIComponent(params)}`;
+    const text       = encodeURIComponent('こんな朱猪になっちゃった！ 朱猪わらいで朱猪を完成させよう！');
+    const hashtag    = encodeURIComponent('朱猪わらい');
+    const twitterUrl = `//twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=${hashtag}`;
+    open(twitterUrl, '_blank', `menubar=no,toolbar=no,resizable=yes,scrollbars=yes,width=710,height=400`);
+  }
+
+  restore() {
+    this.hue = this.params.get('hue');
+    this.animEntities.forEach(x => x.restore());
+    this.finish();
+    this.updateTopText();
   }
 
   reset() {
     this.downloadImageAndCloseWindow();
-    if (this.cloneWorldNode) {
-      this.world.element.parentNode.replaceChild(this.cloneWorldNode, this.world.element);
-    }
-    this.world           = new Entity('.world');
-    this.topText         = new Entity('.top .text');
-    this.saveImageButton = new Entity('.bottom .left.button');
-    this.tweetButton     = new Entity('.bottom .center.button');
-    this.resetButton     = new Entity('.bottom .right.button');
-    this.animEntities    = Object.keys(QUERY_NAME_MAP).map(x => new Entity(x));
-    this.cloneWorldNode  = this.world.element.cloneNode(true);
-
-    const hue            = random(360);
-    this.bgColor         = `hsl(${hue}, 100%, 70%)`;
-    this.accentColor     = `hsl(${(hue - 90) % 360}, 100%, 40%)`;
-    this.topText.stroke  = this.accentColor;
-
-    this.world.classRemove('loading');
-    this.world.element.style.setProperty('background-color', this.bgColor);
-    this.updateTopText('クリックすると始まるよ！―― Click to Start!');
+    this.hue = random(360);
+    this.animEntities.forEach(x => x.reset());
     new Game(this);
+  }
+
+  finish() {
+    this.world.addClass('loading');
+    this.updateTopText('完成！―― Finish!');
+    this.buttons.removeClass('hidden');
   }
 }
 
+/**
+ * ゲームのサイクルを記述するクラス。
+ */
 class Game {
   currentEntity = null;
   service;
@@ -142,6 +158,11 @@ class Game {
   }
 
   start() {
+    this.service.world.removeClass('loading');
+    this.service.updateTopText('クリックすると始まるよ！―― Click to Start!');
+    this.service.world.element.style.setProperty('background-color', this.service.bgColor);
+    this.service.topText.updateAttribute('stroke', this.service.accentColor);
+    this.service.buttons.addClass('hidden');
     const saveImageButtonClick = e => {
       e.stopPropagation();
       this.service.saveImage();
@@ -164,17 +185,17 @@ class Game {
         this.currentEntity = this.service.animEntities[0];
       } else {
         // 初回以降
-        cancelAnimationFrame(this.currentEntity.animationFrame);
-        Object.assign(this.currentEntity, { animationFrame: null, stroke: null });
-        this.currentEntity = this.service.animEntities[this.service.animEntities.indexOf(this.currentEntity) + 1];
+        this.currentEntity.updateAttribute('stroke', null);
+        this.currentEntity.animation = false;
+        this.currentEntity           = this.service.animEntities[this.service.animEntities.indexOf(this.currentEntity) + 1];
       }
       if (this.currentEntity) {
         // 終了以前
         this.service.updateTopText(this.currentEntity.name);
-        this.currentEntity.stroke = this.service.accentColor;
+        this.currentEntity.updateAttribute('stroke', this.service.accentColor);
       } else {
         // 終了処理
-        this.finish();
+        this.service.finish();
         this.service.world.element.removeEventListener('click', worldClick);
       }
     };
@@ -184,34 +205,33 @@ class Game {
     this.service.world.element.addEventListener('click', worldClick);
   }
 
-  finish() {
-    this.service.world.classAdd('loading');
-    this.service.updateTopText('完成！―― Finish!');
-    this.service.appearButtons();
-  }
-
   animate(entity) {
-    const update = ({ origin, x, y, scale, rotate, stop })=> {
-      const dOrigin          = 50 + Math.abs(5 - origin);
-      const dScale           = 0.5 + Math.abs(scale);
-      const dX               = 64 - Math.abs(128 - x);
-      const dY               = 64 - Math.abs(128 - x);
-      entity.transform       = `translate(${dX} ${dY}) scale(${dScale}) rotate(${rotate})`;
-      entity.transformOrigin = `${dOrigin}px ${40}px`;
-      origin                 = (origin + 1) % 10;
-      x                      = (x + 7) % 256;
-      y                      = (y + 3) % 256;
-      scale                  = ((scale + 5) * 10 + 1) % 100 / 10 - 5;
-      rotate                 = (rotate + 9) % 360;
-      entity.animationFrame  = requestAnimationFrame(() => update({ origin, x, y, scale, rotate }));
+    const update = ({ origin, x, y, scale, rotate })=> {
+      const dOrigin = 50 + Math.abs(5 - origin); // 45 ~ 55
+      const dScale  = .5 + Math.abs(scale);      // .5 ~ 5.5
+      const dX      = 64 - Math.abs(128 - x);    // -64 ~ 64
+      const dY      = 64 - Math.abs(128 - y);    // -64 ~ 64
+      entity.updateAttribute('transform', `translate(${dX} ${dY}) scale(${dScale}) rotate(${rotate})`);
+      entity.updateAttribute('transform-origin', `${dOrigin}px 40px`);
+      origin                = (origin + 1) % 10;
+      x                     = (x + 7) % 256;
+      y                     = (y + 3) % 256;
+      scale                 = ((scale + 5) * 10 + 1) % 100 / 10 - 5;
+      rotate                = (rotate + 9) % 360;
+      if (entity.animation) { requestAnimationFrame(() => update({ origin, x, y, scale, rotate })); }
     };
+    entity.animation = true;
     update({ origin: random(10), x: random(128), y: random(128), scale: random(5), rotate: random(360) });
   };
 };
 
 addEventListener('load', async load => new Service());
 
-/** {@link https://qiita.com/Nikkely/items/aa485ebdbec51e49ecbc} */
+/**
+ * 渡されたSVGのcomputedStyleを計算して、Promise<DataURI>として返却する関数。
+ *
+ * {@link https://qiita.com/Nikkely/items/aa485ebdbec51e49ecbc}
+ */
 const svg2png = (svg) => {
   const clonedSvg   = svg.cloneNode(false);
   const queue       = [[svg, clonedSvg]];
