@@ -1,5 +1,5 @@
 {
-  "name": "akaino-warai-staging",
+  "name": "akaino-warai",
   "version": "1.0.0",
   "description": "君だけの面白おかしい朱猪ができたらSNSでシェアしよう！",
   "main": "scripts.js",
@@ -21,12 +21,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ver-1000000/akaino-warai-staging.git"
+    "url": "git+https://github.com/ver-1000000/akaino-warai.git"
   },
   "author": "@Ver1000000000",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ver-1000000/akaino-warai-staging/issues"
+    "url": "https://github.com/ver-1000000/akaino-warai/issues"
   },
-  "homepage": "https://github.com/ver-1000000/akaino-warai-staging"
+  "homepage": "https://github.com/ver-1000000/akaino-warai"
 }
