@@ -1,5 +1,13 @@
 const random = (range = 100) => Math.round(Math.random() * range);
 
+const average = (nums) => nums.reduce((a, b) => a + b, 0) / nums.length;
+
+const median = (nums) => {
+  const half = (nums.length / 2) | 0;
+  const temp = nums.slice().sort((a, b) => a < b ? -1 : b < a ? 1 : 0);
+  return (temp.length % 2) ? temp[half] : (temp[half - 1] + temp[half]) / 2;
+};
+
 const now = () => new Date().toLocaleString('ja-JP', {
   year: 'numeric',
   month: '2-digit',
@@ -35,6 +43,13 @@ class Entity {
       .map(x => [x, this.element.getAttribute(x)])
       .forEach(([k, v]) => v && params.append(`${this.uniqQuery}:${k}`, v));
     return params;
+  }
+
+  get value() {
+    const toNumbers             = (str) => (str || '').split(/[^0-9^\\.]/).filter(Boolean).map(Number);
+    const [x, y, scale, rotate] = toNumbers(this.element.getAttribute('transform'));
+    const [originX, originY]    = toNumbers(this.element.getAttribute('transform-origin'));
+    return { x, y, scale, rotate, originX, originY };
   }
 
   constructor(uniqQuery) {
@@ -102,6 +117,36 @@ class Service {
     return `${url}?${params}`;
   }
 
+  /** 変更に弱い設計なので注意 */
+  get score() {
+    const value = this.animEntities.reduce((a, { value }) => (
+      {
+        x: [...a.x, value.x],
+        y: [...a.y, value.y],
+        scale: [...a.scale, value.scale],
+        rotate: [...a.rotate, value.rotate],
+        originX: [...a.originX, value.originX]
+      }
+    ), { x: [], y: [], scale: [], rotate: [], originX: [] });
+    const calculateScoreAverage = (values, min, max) => {
+      // 理想値(中央値)`ideal`までの近似度を百分率にしてスコアとする
+      const calculateScore = (min, max, ideal, value, isRotate = false) => {
+        const range    = max - min;
+        const distance = Math.abs(ideal - (value % max) * (isRotate ? 2 : 1))
+        return 100 - (distance / range * 100);
+      };
+      return average(values.map(x => calculateScore(min, max, median(values), x)));
+    };
+    const scoreAverages = [
+      calculateScoreAverage(value.x,       -64, 64),
+      calculateScoreAverage(value.y,       -64, 64),
+      calculateScoreAverage(value.scale,   .5,  5.5),
+      calculateScoreAverage(value.rotate,  0,   180, true),
+      calculateScoreAverage(value.originX, 45,  55)
+    ];
+    return Math.round(average(scoreAverages) * 10) / 10;
+  }
+
   constructor() {
     new Control(this);
     if (this.params.get('hue') != null) { this.restore(); }
@@ -123,7 +168,15 @@ class Service {
 
   tweet() {
     const url        = encodeURIComponent(this.resultURL);
-    const text       = encodeURIComponent('こんな朱猪になっちゃった！ 朱猪わらいで朱猪を完成させよう！');
+    const score      = this.score;
+    const message    =
+      score < 30 ? 'もうなんだかよくわからない！' :
+      score < 50 ? 'こんな朱猪になっちゃった！' :
+      score < 70 ? 'まあまあの出来！' :
+      score < 90 ? 'イイ線いってる！' :
+      score < 95 ? 'ミラクルショット！あと一歩！' :
+                   'こんな完璧な朱猪ってある？？？';
+    const text       = encodeURIComponent(`${score}点！ ${message} 朱猪わらいで朱猪を完成させよう！`);
     const hashtag    = encodeURIComponent('朱猪わらい');
     const twitterUrl = `//twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=${hashtag}`;
     open(twitterUrl, '_blank', `menubar=no,toolbar=no,resizable=yes,scrollbars=yes,width=710,height=400`);
@@ -145,8 +198,8 @@ class Service {
 
   finish() {
     this.world.addClass('loading');
-    this.updateTopText('完成！―― Finish!');
     this.buttons.removeClass('hidden');
+    setTimeout(() => this.updateTopText(`Score: ${this.score}`), 500);
   }
 
   updateTopText(text = '') {
