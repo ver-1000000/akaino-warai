@@ -1,0 +1,88 @@
+html,
+body {
+  background: #eee;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  font-weight: bolder;
+}
+
+.loading {
+  pointer-events: none;
+}
+
+.world {
+  box-shadow: 0 0 1vmin #00000050, 0 0 0.5vmin #00000050 inset;
+  border-radius: min(1vmin, 5px);
+  cursor: pointer;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.akaino {
+  transform-origin: 50px 40px;
+  transform: translate(206px, 203px) scale(2);
+  width: 100px;
+  height: 80px;
+}
+
+.text {
+  fill: white;
+  text-anchor: middle;
+  user-select: none;
+  stroke-width: 6px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+}
+
+.buttons {
+  pointer-events: all;
+  transition: opacity 300ms ease;
+}
+
+.buttons.hidden {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.buttons .bg,
+.buttons .frame {
+  width: 160px;
+  height: 40px;
+  rx: 5px;
+}
+
+.buttons .frame {
+  fill: none;
+  stroke: #ffffffee;
+  stroke-width: 2px;
+}
+
+.buttons .left .bg {
+  fill: #ff99ffcc;
+}
+
+.buttons .center .bg {
+  fill: #8bb9f7cc;
+}
+
+.buttons .right .bg {
+  fill: #ffd012cc;
+}
+
+.downloading.world {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.downloading .top,
+.downloading .bottom {
+  display: none;
+}
