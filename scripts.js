@@ -212,15 +212,15 @@ class Control {
       const dY      = 64 - Math.abs(128 - y);          // -64 ~ 64
       entity.updateAttribute('transform', `translate(${dX} ${dY}) scale(${dScale}) rotate(${rotate})`);
       entity.updateAttribute('transform-origin', `${dOrigin}px 40px`);
-      origin                = (origin + 1) % 10;
-      x                     = (x + 7) % 256;
-      y                     = (y + 3) % 256;
-      scale                 = (scale + 1) % 100;
-      rotate                = (rotate + 9) % 360;
+      origin = (origin + 1) % 10;
+      x      = (x + 7) % 256;
+      y      = (y + 3) % 256;
+      scale  = (scale + 1) % 100;
+      rotate = (rotate + 9) % 360;
       if (entity.animation) { requestAnimationFrame(() => update({ origin, x, y, scale, rotate })); }
     };
     entity.animation = true;
-    update({ origin: random(10), x: random(128), y: random(128), scale: random(5), rotate: random(360) });
+    update({ origin: random(10), x: random(256), y: random(256), scale: random(100), rotate: random(360) });
   };
 };
 
