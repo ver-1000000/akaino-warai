@@ -1,5 +1,14 @@
 const random = (range = 100) => Math.round(Math.random() * range);
 
+const now = () => new Date().toLocaleString('ja-JP', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: 'numeric'
+}).replace(/\D/g, '');
+
 const QUERY_NAME_MAP = {
   '.body': '身体―― Body',
   '.nose': '鼻―― Nose',
@@ -89,7 +98,8 @@ class Service {
     const params = new URLSearchParams();
     this.animEntities.forEach(x => [...x.searchParams].forEach(([k, v]) => params.append(k, v)));
     params.append('hue', this.hue);
-    return `https://ver-1000000.github.io/akaino-warai/?${params}`;
+    const url = location.href.replace(/(?!.*\/).*/, '');
+    return `${url}?${params}`;
   }
 
   constructor() {
@@ -102,7 +112,7 @@ class Service {
     this.restore();
     this.buttons.addClass('hidden');
     svg2png(this.world.element).then(href => {
-      Object.assign(document.createElement('a'), { href, download: 'akaino-warai.png' }).click();
+      Object.assign(document.createElement('a'), { href, download: `akaino-warai_${now()}.png` }).click();
       close();
     });
   }

@@ -1,0 +1,29 @@
+{
+  "name": "akaino-warai-staging",
+  "version": "1.0.0",
+  "description": "君だけの面白おかしい朱猪ができたらSNSでシェアしよう！",
+  "main": "scripts.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/cli": "^7.10.4",
+    "@babel/core": "^7.10.4",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-syntax-class-properties": "^7.10.4",
+    "lite-server": "^2.5.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx babel --minified --plugins @babel/plugin-proposal-class-properties scripts.js -o scripts.min.js",
+    "start": "npx lite-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ver-1000000/akaino-warai-staging.git"
+  },
+  "author": "@Ver1000000000",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ver-1000000/akaino-warai-staging/issues"
+  },
+  "homepage": "https://github.com/ver-1000000/akaino-warai-staging"
+}
