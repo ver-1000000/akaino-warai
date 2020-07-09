@@ -192,6 +192,7 @@ class Service {
     this.hue = this.params.get('hue');
     this.animEntities.forEach(x => x.restore());
     this.world.element.style.setProperty('background-color', this.bgColor);
+    this.topText.updateAttribute('stroke', this.service.accentColor);
     this.finish();
     this.updateTopText();
   }
