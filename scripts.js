@@ -40,15 +40,15 @@ class Entity {
     const params = new URLSearchParams();
     Entity
       .RESTORABLE_ATTRIBUTES
-      .map(x => [x, this.element.getAttribute(x)])
+      .map(x => [x, this.element.style.getPropertyValue(x)])
       .forEach(([k, v]) => v && params.append(`${this.uniqQuery}:${k}`, v));
     return params;
   }
 
   get value() {
     const toNumbers             = (str) => (str || '').split(/[^0-9^\\.]/).filter(Boolean).map(Number);
-    const [x, y, scale, rotate] = toNumbers(this.element.getAttribute('transform'));
-    const [originX, originY]    = toNumbers(this.element.getAttribute('transform-origin'));
+    const [x, y, scale, rotate] = toNumbers(this.element.style.getPropertyValue('transform'));
+    const [originX, originY]    = toNumbers(this.element.style.getPropertyValue('transform-origin'));
     return { x, y, scale, rotate, originX, originY };
   }
 
@@ -66,23 +66,23 @@ class Entity {
     this.element.classList.add(tokens);
   }
 
-  updateAttribute(key, value) {
+  updateStyle(property, value) {
     if (value) {
-      this.element.setAttribute(key, value);
+      this.element.style.setProperty(property, value);
     } else {
-      this.element.removeAttribute(key);
+      this.element.style.removeProperty(property);
     }
   }
 
   reset() {
-    Entity.RESTORABLE_ATTRIBUTES.forEach(attr => this.updateAttribute(attr, null));
+    Entity.RESTORABLE_ATTRIBUTES.forEach(attr => this.updateStyle(attr, null));
   }
 
   restore() {
     const params = Object.fromEntries(new URLSearchParams(location.search));
     Entity.RESTORABLE_ATTRIBUTES.forEach(attr => {
       const value = params[`${this.uniqQuery}:${attr}`];
-      if (value) { this.updateAttribute(attr, value); }
+      if (value) { this.updateStyle(attr, value); }
     });
   }
 }
@@ -192,7 +192,7 @@ class Service {
     this.hue = this.params.get('hue');
     this.animEntities.forEach(x => x.restore());
     this.world.element.style.setProperty('background-color', this.bgColor);
-    this.topText.updateAttribute('stroke', this.service.accentColor);
+    this.topText.updateStyle('stroke', this.service.accentColor);
     this.finish();
     this.updateTopText();
   }
@@ -242,14 +242,14 @@ class Control {
       this.currentEntity = this.service.animEntities[0];
     } else {
       // 初回以降
-      this.currentEntity.updateAttribute('stroke', null);
+      this.currentEntity.updateStyle('stroke', null);
       this.currentEntity.animation = false;
       this.currentEntity           = this.service.animEntities[this.service.animEntities.indexOf(this.currentEntity) + 1];
     }
     if (this.currentEntity) {
       // 終了以前
       this.service.updateTopText(this.currentEntity.name);
-      this.currentEntity.updateAttribute('stroke', this.service.accentColor);
+      this.currentEntity.updateStyle('stroke', this.service.accentColor);
     } else {
       // 終了処理
       this.service.finish();
@@ -260,7 +260,7 @@ class Control {
     this.service.world.removeClass('loading');
     this.service.updateTopText('クリックすると始まるよ！―― Click to Start!');
     this.service.world.element.style.setProperty('background-color', this.service.bgColor);
-    this.service.topText.updateAttribute('stroke', this.service.accentColor);
+    this.service.topText.updateStyle('stroke', this.service.accentColor);
     this.service.buttons.addClass('hidden');
     this.service.saveImageButton.element.onclick = e => this.saveImageButtonClick(e);
     this.service.tweetButton.element.onclick     = e => this.tweetButtonClick(e);
@@ -274,8 +274,8 @@ class Control {
       const dScale  = (5 + Math.abs(scale - 50)) / 10; // .5 ~ 5.5
       const dX      = 64 - Math.abs(128 - x);          // -64 ~ 64
       const dY      = 64 - Math.abs(128 - y);          // -64 ~ 64
-      entity.updateAttribute('transform', `translate(${dX} ${dY}) scale(${dScale}) rotate(${rotate})`);
-      entity.updateAttribute('transform-origin', `${dOrigin}px 40px`);
+      entity.updateStyle('transform', `translate(${dX}px, ${dY}px) scale(${dScale}) rotate(${rotate}deg)`);
+      entity.updateStyle('transform-origin', `${dOrigin}px 40px`);
       origin = (origin + 1) % 10;
       x      = (x + 7) % 256;
       y      = (y + 3) % 256;
