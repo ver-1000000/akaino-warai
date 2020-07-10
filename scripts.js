@@ -173,6 +173,7 @@ class Service {
     const url        = encodeURIComponent(this.resultURL);
     const score      = this.score;
     const message    =
+      score < 6 ?  'キミは伝説の低級戦士……' :
       score < 30 ? 'もうなんだかよくわからない！' :
       score < 50 ? 'こんな朱猪になっちゃった！' :
       score < 70 ? 'まあまあの出来！' :
