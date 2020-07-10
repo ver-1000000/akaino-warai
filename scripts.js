@@ -84,6 +84,8 @@ class Entity {
     Entity.RESTORABLE_ATTRIBUTES.forEach(attr => {
       const value = params[`${this.uniqQuery}:${attr}`];
       if (value) { this.updateStyle(attr, value); }
+      // `%2C`(,)がsearchParamsに含まれていなければ、f6cb61c以前の手法でrestoreできるように後方互換
+      if (!location.search.includes('%2C')) { this.element.setAttribute(attr, value); }
     });
   }
 }
@@ -193,7 +195,7 @@ class Service {
     this.hue = this.params.get('hue');
     this.animEntities.forEach(x => x.restore());
     this.world.element.style.setProperty('background-color', this.bgColor);
-    this.topText.updateStyle('stroke', this.service.accentColor);
+    this.topText.updateStyle('stroke', this.accentColor);
     this.finish();
     this.updateTopText();
   }
