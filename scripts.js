@@ -67,15 +67,16 @@ class Entity {
   }
 
   updateStyle(property, value) {
-    if (value) {
-      this.element.style.setProperty(property, value);
-    } else {
-      this.element.style.removeProperty(property);
-    }
+    this.element.style.setProperty(property, value);
   }
 
+  /**
+   * HACK: iOS Safariにて、styleの削除やリセットを行うと、スタイルが以前のママ残ってしまうので、
+   * 新しく初期値を設置してリセットする
+   */
   reset() {
-    Entity.RESTORABLE_ATTRIBUTES.forEach(attr => this.updateStyle(attr, null));
+    this.updateStyle('transform', `translate(0px, 0px) scale(1) rotate(0deg)`);
+    this.updateStyle('transform-origin', `50px 40px`);
   }
 
   restore() {
