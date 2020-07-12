@@ -202,6 +202,7 @@ class Service {
   }
 
   finish() {
+    this.world.element.onclick = this.world.element.onkeyup = null;
     this.world.addClass('loading');
     setTimeout(() => {
       this.buttons.removeClass('hidden');
@@ -241,7 +242,7 @@ class Control {
     this.service.reset();
   };
 
-  worldClick() {
+  nextStep() {
     if (this.currentEntity == null) {
       // 初回
       this.service.animEntities.forEach(entity => this.animate(entity));
@@ -263,6 +264,7 @@ class Control {
   }
 
   start() {
+    this.service.world.element.focus();
     this.service.world.removeClass('loading');
     this.service.updateTopText('クリックすると始まるよ！―― Click to Start!');
     this.service.world.element.style.setProperty('background-color', this.service.bgColor);
@@ -271,7 +273,8 @@ class Control {
     this.service.saveImageButton.element.onclick = e => this.saveImageButtonClick(e);
     this.service.tweetButton.element.onclick     = e => this.tweetButtonClick(e);
     this.service.resetButton.element.onclick     = e => this.resetButtonClick(e);
-    this.service.world.element.onclick           = () => this.worldClick();
+    this.service.world.element.onclick           = () => this.nextStep();
+    this.service.world.element.onkeyup           = () => this.nextStep();
   }
 
   animate(entity) {
