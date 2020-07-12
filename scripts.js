@@ -203,8 +203,10 @@ class Service {
 
   finish() {
     this.world.addClass('loading');
-    this.buttons.removeClass('hidden');
-    setTimeout(() => this.updateTopText(`Score: ${this.score}`), 500);
+    setTimeout(() => {
+      this.buttons.removeClass('hidden');
+      this.updateTopText(`Score: ${this.score}`);
+    }, 500);
   }
 
   updateTopText(text = '') {
