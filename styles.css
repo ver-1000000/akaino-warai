@@ -26,6 +26,10 @@ body {
   max-height: 100%;
 }
 
+.world:focus {
+  outline: none;
+}
+
 .akaino {
   transform-origin: 50px 40px;
   transform: translate(206px, 203px) scale(2);
