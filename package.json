@@ -1,23 +1,22 @@
 {
   "name": "akaino-warai",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "君だけの面白おかしい朱猪ができたらSNSでシェアしよう！",
-  "main": "scripts.js",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "npm run build && npx lite-server --baseDir dist",
+    "prebuild": "npx cpx 'src/*.{ico,png,html,css}' dist/",
+    "build": "npx tsc",
+    "build:gh-pages": "npm run build",
+    "postbuild:gh-pages": "npx terser dist/index.js --mangle --compress -o dist/index.js"
+  },
   "dependencies": {},
   "devDependencies": {
-    "@babel/cli": "^7.10.4",
-    "@babel/core": "^7.10.4",
-    "@babel/plugin-proposal-class-properties": "^7.10.4",
-    "babel-preset-minify": "^0.5.1",
-    "cpx": "^1.5.0",
-    "lite-server": "^2.5.4"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx lite-server",
-    "downpile": "npx babel scripts.js -o scripts.js",
-    "prebuild": "npx cpx '*.{ico,png,html,css,js}' dist/",
-    "build:gh-pages": "npm run downpile && npm run prebuild"
+    "@types/node": "*",
+    "cpx": "*",
+    "lite-server": "*",
+    "terser": "*",
+    "typescript": "*"
   },
   "repository": {
     "type": "git",

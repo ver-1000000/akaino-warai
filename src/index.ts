@@ -1,8 +1,8 @@
 const random = (range = 100) => Math.round(Math.random() * range);
 
-const average = (nums) => nums.reduce((a, b) => a + b, 0) / nums.length;
+const average = (nums: number[]) => nums.reduce((a, b) => a + b, 0) / nums.length;
 
-const median = (nums) => {
+const median = (nums: number[]) => {
   const half = (nums.length / 2) | 0;
   const temp = nums.slice().sort((a, b) => a < b ? -1 : b < a ? 1 : 0);
   return (temp.length % 2) ? temp[half] : (temp[half - 1] + temp[half]) / 2;
@@ -27,13 +27,23 @@ const QUERY_NAME_MAP = {
 };
 
 /**
+ * 引数がNullableならエラーを投げるアサーション関数。
+ */
+function assertIsDefined<T>(val: T): asserts val is NonNullable<T> {
+  if (val == null) {
+    alert('レンダリングエラー: ページを再読込してください。');
+    throw new Error(`Expected 'val' to be defined, but received ${val}`);
+  }
+}
+
+/**
  * DOMを扱いやすくするためのラッパー。
  */
 class Entity {
   static RESTORABLE_ATTRIBUTES = ['stroke', 'transform', 'transform-origin'];
-  uniqQuery;
-  name;
-  element;
+  uniqQuery: string;
+  name: string;
+  element: SVGElement;
   animation = false;
 
   get searchParams() {
@@ -46,27 +56,29 @@ class Entity {
   }
 
   get value() {
-    const toNumbers             = (str) => (str || '').split(/[^0-9^\\.]/).filter(Boolean).map(Number);
+    const toNumbers             = (str: string) => (str || '').split(/[^0-9^\\.]/).filter(Boolean).map(Number);
     const [x, y, scale, rotate] = toNumbers(this.element.style.getPropertyValue('transform'));
     const [originX, originY]    = toNumbers(this.element.style.getPropertyValue('transform-origin'));
     return { x, y, scale, rotate, originX, originY };
   }
 
-  constructor(uniqQuery) {
+  constructor(uniqQuery: string) {
     this.uniqQuery = uniqQuery;
-    this.name      = QUERY_NAME_MAP[uniqQuery] || '';
-    this.element   = document.querySelector(uniqQuery);
+    this.name      = uniqQuery in QUERY_NAME_MAP ? QUERY_NAME_MAP[uniqQuery as keyof typeof QUERY_NAME_MAP] : '';
+    const element  = document.querySelector<SVGElement>(uniqQuery);
+    assertIsDefined(element);
+    this.element = element;
   }
 
-  removeClass(...tokens) {
-    this.element.classList.remove(tokens);
+  removeClass(...tokens: string[]) {
+    this.element.classList.remove(...tokens);
   }
 
-  addClass(...tokens) {
-    this.element.classList.add(tokens);
+  addClass(...tokens: string[]) {
+    this.element.classList.add(...tokens);
   }
 
-  updateStyle(property, value) {
+  updateStyle(property: string, value: string | null) {
     this.element.style.setProperty(property, value);
   }
 
@@ -115,14 +127,14 @@ class Service {
   get resultURL() {
     const params = new URLSearchParams();
     this.animEntities.forEach(x => [...x.searchParams].forEach(([k, v]) => params.append(k, v)));
-    params.append('hue', this.hue);
+    params.append('hue', String(this.hue));
     const url = location.href.replace(/(?!.*\/).*/, '');
     return `${url}?${params}`;
   }
 
   /** 変更に弱い設計なので注意 */
   get score() {
-    const value = this.animEntities.reduce((a, { value }) => (
+    const value = this.animEntities.reduce<{ [key: string]: number[] }>((a, { value }) => (
       {
         x: [...a.x, value.x],
         y: [...a.y, value.y],
@@ -131,14 +143,14 @@ class Service {
         originX: [...a.originX, value.originX]
       }
     ), { x: [], y: [], scale: [], rotate: [], originX: [] });
-    const calculateScoreAverage = (values, min, max) => {
-      // 理想値(中央値)`ideal`までの近似度を百分率にしてスコアとする
-      const calculateScore = (min, max, ideal, value, isRotate = false) => {
+    const calculateScoreAverage = (values: number[], min: number, max: number, isRotate = false) => {
+      /** 理想値(中央値)`ideal`までの近似度を百分率にしてスコアとする */
+      const calculateScore = (min: number, max: number, ideal: number, value: number, isRotate = false) => {
         const range    = max - min;
         const distance = Math.abs(ideal - (value % max) * (isRotate ? 2 : 1))
         return 100 - (distance / range * 100);
       };
-      return average(values.map(x => calculateScore(min, max, median(values), x)));
+      return average(values.map(x => calculateScore(min, max, median(values), x, isRotate)));
     };
     const scoreAverages = [
       calculateScoreAverage(value.x,       -64, 64),
@@ -159,7 +171,7 @@ class Service {
   downloadImage() {
     this.restore();
     this.buttons.addClass('hidden');
-    svg2png(this.world.element).then(href => {
+    svg2png(this.world.element as SVGSVGElement).then(href => {
       Object.assign(document.createElement('a'), { href, download: `akaino-warai_${now()}.png` }).click();
       close();
     });
@@ -193,7 +205,7 @@ class Service {
   }
 
   restore() {
-    this.hue = this.params.get('hue');
+    this.hue = Number(this.params.get('hue'));
     this.animEntities.forEach(x => x.restore());
     this.world.element.style.setProperty('background-color', this.bgColor);
     this.topText.updateStyle('stroke', this.accentColor);
@@ -219,25 +231,24 @@ class Service {
  * コントロールを記述するクラス。
  */
 class Control {
-  currentEntity = null;
-  service;
+  currentEntity: null | Entity = null;
 
-  constructor(service) {
+  constructor(private service: Service) {
     this.service = service;
     this.start();
   }
 
-  saveImageButtonClick(e) {
+  saveImageButtonClick(e: MouseEvent) {
     e.stopPropagation();
     this.service.openDownloadWindow();
   }
 
-  tweetButtonClick(e) {
+  tweetButtonClick(e: MouseEvent) {
     e.stopPropagation();
     this.service.tweet();
   }
 
-  resetButtonClick(e) {
+  resetButtonClick(e: MouseEvent) {
     e.stopPropagation();
     this.service.reset();
   };
@@ -277,8 +288,8 @@ class Control {
     this.service.world.element.onkeyup           = () => this.nextStep();
   }
 
-  animate(entity) {
-    const update = ({ origin, x, y, scale, rotate })=> {
+  animate(entity: Entity) {
+    const update = ({ origin, x, y, scale, rotate }: { [key: string]: number })=> {
       const dOrigin = 50 + Math.abs(origin - 5);       // 45 ~ 55
       const dScale  = (5 + Math.abs(scale - 50)) / 10; // .5 ~ 5.5
       const dX      = 64 - Math.abs(128 - x);          // -64 ~ 64
@@ -297,30 +308,30 @@ class Control {
   };
 };
 
-addEventListener('load', async load => new Service());
+addEventListener('load', async _ => new Service());
 
 /**
  * 渡されたSVGのcomputedStyleを計算して、Promise<DataURI>として返却する関数。
  *
  * {@link https://qiita.com/Nikkely/items/aa485ebdbec51e49ecbc}
  */
-const svg2png = (svg) => {
-  const clonedSvg   = svg.cloneNode(false);
+const svg2png = (svg: SVGSVGElement) => {
+  const clonedSvg   = svg.cloneNode(false) as SVGSVGElement;
   const queue       = [[svg, clonedSvg]];
-  clonedSvg.version = 1.1;
-  clonedSvg.xmlns   = 'http://www.w3.org/2000/svg';
+  // clonedSvg.version = 1.1;
+  // clonedSvg.xmlns   = 'http://www.w3.org/2000/svg';
   while (queue.length !== 0) {
-    const [rEle, vEle]  = queue.pop();
+    const [rEle, vEle]  = queue.pop() || [];
     const computedStyle = window.getComputedStyle(rEle, '');
-    const rChildren     = rEle.children
+    const rChildren     = rEle.children;
     for (let property of computedStyle) {
-      vEle.style[property] = computedStyle.getPropertyValue(property);
+      vEle.style[property as any] = computedStyle.getPropertyValue(property);
     }
     if (rChildren.length !== 0) {
       for (let rChild of rChildren) {
         const vChild = rChild.cloneNode(false);
         vEle.appendChild(vChild);
-        queue.push([rChild, vChild]);
+        queue.push([rChild, vChild] as SVGSVGElement[]);
       }
     } else {
       vEle.innerHTML = rEle.innerHTML;
@@ -333,7 +344,7 @@ const svg2png = (svg) => {
   const image         = new Image();
   return new Promise((resolve, reject) => {
     image.onload = () => {
-      ctx.drawImage(image, 0, 0);
+      ctx?.drawImage(image, 0, 0);
       resolve(canvas.toDataURL('image/png'));
     };
     image.onerror = e => reject(e);

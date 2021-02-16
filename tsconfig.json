@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "umd",
+    "outDir": "./dist",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "downlevelIteration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "src"
+  ]
+}

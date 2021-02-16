@@ -1,5 +1,0 @@
-{
-  "plugins": ["@babel/proposal-class-properties"],
-  "presets": ["minify"],
-  "comments": false
-}
